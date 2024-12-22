@@ -17,7 +17,7 @@
       margin: auto;
       border: 2px solid #ccc;
     }
-    #qr-reader video {
+    #qr-reader video, #camera-preview {
       width: 100% !important;
       height: 100% !important;
     }
@@ -37,6 +37,7 @@
   <h1>QR Code Scanner</h1>
   <p id="status">Initializing camera...</p>
   <div id="qr-reader"></div>
+  <video id="camera-preview" autoplay playsinline></video>
   <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
 
@@ -75,40 +76,44 @@
       const status = document.getElementById("status");
 
       qrReader.start(
-        { facingMode: "environment" }, // Prefer back camera
+        { facingMode: { exact: "environment" } }, // Force back camera on mobile
         {
           fps: 10,
-          qrbox: 250
+          qrbox: { width: 250, height: 250 } // Specify QR box size explicitly
         },
         (decodedText) => {
           revealItem(decodedText); // Process code
         },
         (errorMessage) => {
-          console.warn(errorMessage); // Handle scanning errors
+          console.warn("Scanning error: ", errorMessage); // Log scanning errors
         }
       ).then(() => {
         status.innerText = "Camera active. Point at a QR code.";
       }).catch((err) => {
-        status.innerText = "Camera access denied or unavailable.";
-        console.error("Camera error:", err);
+        status.innerText = "Error starting scanner: " + err.message;
+        console.error("Scanner error:", err);
       });
     }
 
-    // Request camera permissions and check compatibility
+    // Test camera permissions and compatibility
+    async function testCameraAccess() {
+      const status = document.getElementById("status");
+      try {
+        const video = document.getElementById("camera-preview");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream; // Display video feed
+        startScanner(); // Start scanner if permission is granted
+      } catch (err) {
+        status.innerText = "Permission denied or camera not available.";
+        console.error("Camera access error:", err);
+      }
+    }
+
+    // Start test
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then(() => {
-          startScanner(); // Start scanner after permission is granted
-        })
-        .catch((err) => {
-          document.getElementById("status").innerText =
-            "Permission denied. Please enable camera access.";
-          console.error("Permission error:", err);
-        });
+      testCameraAccess();
     } else {
-      document.getElementById("status").innerText =
-        "Camera not supported on this device.";
+      document.getElementById("status").innerText = "Camera not supported on this device.";
     }
   </script>
 </body>
