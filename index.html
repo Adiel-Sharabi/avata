@@ -17,10 +17,6 @@
       margin: auto;
       border: 2px solid #ccc;
     }
-    #qr-reader video {
-      width: 100% !important;
-      height: 100% !important;
-    }
     #status {
       margin: 10px 0;
       font-size: 16px;
@@ -34,7 +30,7 @@
   </style>
 </head>
 <body>
-  <h1>QR Code Scanner</h1>
+  <h1>QR Code Scanner 1</h1>
   <p id="status">Initializing camera...</p>
   <div id="qr-reader"></div>
   <p id="result">Waiting for scan...</p>
@@ -70,35 +66,37 @@
     }
 
     // Start QR code scanner
-    function startScanner() {
-      const qrReader = new Html5Qrcode("qr-reader");
+    async function startScanner() {
       const status = document.getElementById("status");
 
-      qrReader.start(
-        { facingMode: { exact: "environment" } }, // Force back camera on mobile
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 } // Specify QR box size explicitly
-        },
-        (decodedText) => {
-          revealItem(decodedText); // Process code
-        },
-        (errorMessage) => {
-          console.warn("Scanning error: ", errorMessage); // Log scanning errors
-        }
-      ).then(() => {
+      try {
+        const qrReader = new Html5Qrcode("qr-reader");
+        await qrReader.start(
+          { facingMode: "environment" }, // Use back camera, fallback if unavailable
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 } // Focus box
+          },
+          (decodedText) => {
+            revealItem(decodedText); // Process code
+          },
+          (errorMessage) => {
+            console.warn("Scanning error: ", errorMessage); // Log scanning errors
+          }
+        );
         status.innerText = "Camera active. Point at a QR code.";
-      }).catch((err) => {
+      } catch (err) {
         status.innerText = "Error starting scanner: " + err.message;
         console.error("Scanner error:", err);
-      });
+      }
     }
 
     // Test camera permissions and compatibility
     async function testCameraAccess() {
       const status = document.getElementById("status");
       try {
-        await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop()); // Close stream after test
         startScanner(); // Start scanner if permission is granted
       } catch (err) {
         status.innerText = "Permission denied or camera not available.";
