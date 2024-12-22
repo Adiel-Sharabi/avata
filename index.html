@@ -13,20 +13,29 @@
     }
     #qr-reader {
       width: 300px;
+      height: 300px;
       margin: auto;
+      border: 2px solid #ccc;
     }
     #qr-reader video {
-      width: 100% !important; /* Ensure video fills the area */
-      height: auto !important;
+      width: 100% !important;
+      height: 100% !important;
     }
-    .hidden {
-      display: none;
+    #status {
+      margin: 10px 0;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    #items-list {
+      margin-top: 10px;
+      list-style-type: none;
+      padding: 0;
     }
   </style>
 </head>
 <body>
   <h1>QR Code Scanner</h1>
-  <p id="instruction">Point the camera at a QR code to scan it.</p>
+  <p id="status">Initializing camera...</p>
   <div id="qr-reader"></div>
   <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
@@ -39,10 +48,10 @@
       "ABCDE": "Item 3 - Demo Item"
     };
 
-    // To track already scanned codes
+    // Track scanned codes
     const scannedCodes = new Set();
 
-    // Function to display matched items
+    // Display scanned result
     function revealItem(code) {
       const result = document.getElementById("result");
       const itemList = document.getElementById("items-list");
@@ -60,33 +69,46 @@
       }
     }
 
-    // Initialize QR Code Scanner
+    // Start QR code scanner
     function startScanner() {
       const qrReader = new Html5Qrcode("qr-reader");
+      const status = document.getElementById("status");
 
       qrReader.start(
-        { facingMode: "environment" }, // Use back camera on mobile devices
+        { facingMode: "environment" }, // Prefer back camera
         {
           fps: 10,
-          qrbox: 250 // Focus area for scanning
+          qrbox: 250
         },
         (decodedText) => {
-          revealItem(decodedText); // Process the scanned code
+          revealItem(decodedText); // Process code
         },
         (errorMessage) => {
-          console.warn(errorMessage); // Handle errors (optional)
+          console.warn(errorMessage); // Handle scanning errors
         }
-      ).catch((err) => {
-        document.getElementById("result").innerText = "Camera access denied or not available.";
-        console.error(err);
+      ).then(() => {
+        status.innerText = "Camera active. Point at a QR code.";
+      }).catch((err) => {
+        status.innerText = "Camera access denied or unavailable.";
+        console.error("Camera error:", err);
       });
     }
 
-    // Check if browser supports media devices
+    // Request camera permissions and check compatibility
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      startScanner();
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then(() => {
+          startScanner(); // Start scanner after permission is granted
+        })
+        .catch((err) => {
+          document.getElementById("status").innerText =
+            "Permission denied. Please enable camera access.";
+          console.error("Permission error:", err);
+        });
     } else {
-      document.getElementById("result").innerText = "Camera not supported on this device.";
+      document.getElementById("status").innerText =
+        "Camera not supported on this device.";
     }
   </script>
 </body>
