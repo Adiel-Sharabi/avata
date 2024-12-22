@@ -16,6 +16,7 @@
       height: 300px;
       margin: auto;
       border: 2px solid #ccc;
+      display: none; /* Hide scanner until button is pressed */
     }
     #status, #result {
       margin: 10px 0;
@@ -30,11 +31,18 @@
       list-style-type: none;
       padding: 0;
     }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>QR Code Scanner</h1>
-  <p id="status">Initializing camera...</p>
+  <p id="status">Press the button to start scanning.</p>
+  <button id="start-btn">Start Scanner</button>
   <div id="qr-reader"></div>
   <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
@@ -70,6 +78,8 @@
     // Start QR code scanner
     async function startScanner() {
       const status = document.getElementById("status");
+      const qrReaderDiv = document.getElementById("qr-reader");
+      qrReaderDiv.style.display = "block"; // Show scanner when button is pressed
 
       try {
         const qrReader = new Html5Qrcode("qr-reader");
@@ -93,25 +103,8 @@
       }
     }
 
-    // Test camera permissions and compatibility
-    async function testCameraAccess() {
-      const status = document.getElementById("status");
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        stream.getTracks().forEach(track => track.stop()); // Close stream after test
-        startScanner(); // Start scanner if permission is granted
-      } catch (err) {
-        status.innerText = "Permission denied or camera not available.";
-        console.error("Camera access error:", err);
-      }
-    }
-
-    // Start test
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      testCameraAccess();
-    } else {
-      document.getElementById("status").innerText = "Camera not supported on this device.";
-    }
+    // Attach event listener to start button
+    document.getElementById("start-btn").addEventListener("click", startScanner);
 
     // Add timestamp
     document.getElementById("datetime").innerText = new Date().toLocaleString();
