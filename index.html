@@ -17,7 +17,7 @@
       margin: auto;
       border: 2px solid #ccc;
     }
-    #qr-reader video, #camera-preview {
+    #qr-reader video {
       width: 100% !important;
       height: 100% !important;
     }
@@ -37,7 +37,6 @@
   <h1>QR Code Scanner</h1>
   <p id="status">Initializing camera...</p>
   <div id="qr-reader"></div>
-  <video id="camera-preview" autoplay playsinline></video>
   <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
 
@@ -99,9 +98,7 @@
     async function testCameraAccess() {
       const status = document.getElementById("status");
       try {
-        const video = document.getElementById("camera-preview");
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = stream; // Display video feed
+        await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         startScanner(); // Start scanner if permission is granted
       } catch (err) {
         status.innerText = "Permission denied or camera not available.";
