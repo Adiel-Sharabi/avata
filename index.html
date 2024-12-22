@@ -57,7 +57,7 @@
         const item = document.createElement("li");
         item.textContent = tags[code];
         itemList.appendChild(item);
-        result.innerText = "Match Found!";
+        result.innerText = "Match Found: " + tags[code];
       } else if (scannedCodes.has(code)) {
         result.innerText = "Already Scanned!";
       } else {
@@ -78,6 +78,7 @@
             qrbox: { width: 250, height: 250 } // Focus box
           },
           (decodedText) => {
+            console.log("Scanned code: ", decodedText); // Log scanned codes
             revealItem(decodedText); // Process code
           },
           (errorMessage) => {
