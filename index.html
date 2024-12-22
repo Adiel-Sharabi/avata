@@ -17,10 +17,13 @@
       margin: auto;
       border: 2px solid #ccc;
     }
-    #status {
+    #status, #result {
       margin: 10px 0;
       font-size: 16px;
       font-weight: bold;
+      position: relative;
+      z-index: 10; /* Ensure text is above the video */
+      background: white; /* Make text more readable */
     }
     #items-list {
       margin-top: 10px;
@@ -35,6 +38,7 @@
   <div id="qr-reader"></div>
   <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
+  <p id="timestamp">Generated at: <span id="datetime"></span></p>
 
   <script>
     // Predefined list of tags
@@ -60,8 +64,6 @@
         result.innerText = "Match Found: " + tags[code];
       } else if (scannedCodes.has(code)) {
         result.innerText = "Already Scanned!";
-      } else {
-        result.innerText = "No Match Found! Raw: " + code; // Show raw code for debugging
       }
     }
 
@@ -78,14 +80,11 @@
             qrbox: { width: 250, height: 250 } // Focus box
           },
           (decodedText) => {
-            console.log("Scanned code: ", decodedText); // Log scanned codes
-            revealItem(decodedText.trim()); // Trim and process code
+            if (!scannedCodes.has(decodedText.trim())) { // Process only once
+              revealItem(decodedText.trim());
+            }
           },
-          (errorMessage) => {
-            const result = document.getElementById("result");
-            result.innerText = "Error: " + errorMessage; // Show error in UI
-            console.warn("Scanning error: ", errorMessage); // Log scanning errors
-          }
+          () => {} // Ignore scanning errors silently
         );
         status.innerText = "Camera active. Point at a QR code.";
       } catch (err) {
@@ -113,6 +112,9 @@
     } else {
       document.getElementById("status").innerText = "Camera not supported on this device.";
     }
+
+    // Add timestamp
+    document.getElementById("datetime").innerText = new Date().toLocaleString();
   </script>
 </body>
 </html>
