@@ -30,7 +30,7 @@
   </style>
 </head>
 <body>
-  <h1>QR Code Scanner 2</h1>
+  <h1>QR Code Scanner</h1>
   <p id="status">Initializing camera...</p>
   <div id="qr-reader"></div>
   <p id="result">Waiting for scan...</p>
@@ -61,7 +61,7 @@
       } else if (scannedCodes.has(code)) {
         result.innerText = "Already Scanned!";
       } else {
-        result.innerText = "No Match Found!";
+        result.innerText = "No Match Found! Raw: " + code; // Show raw code for debugging
       }
     }
 
@@ -79,9 +79,11 @@
           },
           (decodedText) => {
             console.log("Scanned code: ", decodedText); // Log scanned codes
-            revealItem(decodedText); // Process code
+            revealItem(decodedText.trim()); // Trim and process code
           },
           (errorMessage) => {
+            const result = document.getElementById("result");
+            result.innerText = "Error: " + errorMessage; // Show error in UI
             console.warn("Scanning error: ", errorMessage); // Log scanning errors
           }
         );
