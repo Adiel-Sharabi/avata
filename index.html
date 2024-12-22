@@ -15,6 +15,10 @@
       width: 300px;
       margin: auto;
     }
+    #qr-reader video {
+      width: 100% !important; /* Ensure video fills the area */
+      height: auto !important;
+    }
     .hidden {
       display: none;
     }
@@ -22,8 +26,9 @@
 </head>
 <body>
   <h1>QR Code Scanner</h1>
+  <p id="instruction">Point the camera at a QR code to scan it.</p>
   <div id="qr-reader"></div>
-  <p id="result">Scan a QR code</p>
+  <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
 
   <script>
@@ -56,20 +61,33 @@
     }
 
     // Initialize QR Code Scanner
-    const qrReader = new Html5Qrcode("qr-reader");
-    qrReader.start(
-      { facingMode: "environment" }, // Use back camera
-      {
-        fps: 10,
-        qrbox: 250
-      },
-      (decodedText) => {
-        revealItem(decodedText); // Process scanned code
-      },
-      (errorMessage) => {
-        console.warn(errorMessage); // Handle errors
-      }
-    );
+    function startScanner() {
+      const qrReader = new Html5Qrcode("qr-reader");
+
+      qrReader.start(
+        { facingMode: "environment" }, // Use back camera on mobile devices
+        {
+          fps: 10,
+          qrbox: 250 // Focus area for scanning
+        },
+        (decodedText) => {
+          revealItem(decodedText); // Process the scanned code
+        },
+        (errorMessage) => {
+          console.warn(errorMessage); // Handle errors (optional)
+        }
+      ).catch((err) => {
+        document.getElementById("result").innerText = "Camera access denied or not available.";
+        console.error(err);
+      });
+    }
+
+    // Check if browser supports media devices
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      startScanner();
+    } else {
+      document.getElementById("result").innerText = "Camera not supported on this device.";
+    }
   </script>
 </body>
 </html>
