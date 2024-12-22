@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Scanner</title>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.4/minified/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    #qr-reader {
+      width: 300px;
+      margin: auto;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR Code Scanner</h1>
+  <div id="qr-reader"></div>
+  <p id="result">Scan a QR code</p>
+  <ul id="items-list"></ul>
+
+  <script>
+    // Predefined list of tags
+    const tags = {
+      "12345": "Item 1 - Example Description",
+      "67890": "Item 2 - Another Example",
+      "ABCDE": "Item 3 - Demo Item"
+    };
+
+    // To track already scanned codes
+    const scannedCodes = new Set();
+
+    // Function to display matched items
+    function revealItem(code) {
+      const result = document.getElementById("result");
+      const itemList = document.getElementById("items-list");
+
+      if (tags[code] && !scannedCodes.has(code)) {
+        scannedCodes.add(code); // Mark code as scanned
+        const item = document.createElement("li");
+        item.textContent = tags[code];
+        itemList.appendChild(item);
+        result.innerText = "Match Found!";
+      } else if (scannedCodes.has(code)) {
+        result.innerText = "Already Scanned!";
+      } else {
+        result.innerText = "No Match Found!";
+      }
+    }
+
+    // Initialize QR Code Scanner
+    const qrReader = new Html5Qrcode("qr-reader");
+    qrReader.start(
+      { facingMode: "environment" }, // Use back camera
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      (decodedText) => {
+        revealItem(decodedText); // Process scanned code
+      },
+      (errorMessage) => {
+        console.warn(errorMessage); // Handle errors
+      }
+    );
+  </script>
+</body>
+</html>
