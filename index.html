@@ -10,6 +10,8 @@
       font-family: Arial, sans-serif;
       margin: 20px;
       text-align: center;
+      background: url('balar_icon.png') no-repeat center center fixed;
+      background-size: cover;
     }
     #qr-reader {
       width: 300px;
@@ -42,31 +44,55 @@
       font-weight: bold;
       margin-bottom: 10px;
     }
+    #stopwatch {
+      margin: 10px 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <img id="icon" src="balar_icon.png" alt="Icon" style="width: 50px; height: 50px;">
-  <h1 id="header">QR Code Scanner</h1>
-  <p id="status">Press the button to start scanning.</p>
-  <button id="start-btn">Start Scanner</button>
+  <h1 id="header">סורק המטענים של בל"ר פד"מ</h1>
+  <p id="status">ממתין להתחלת הסריקה.</p>
+  <button id="start-btn">התחל סריקה</button>
   <div id="qr-reader"></div>
-  <p id="result">Waiting for scan...</p>
+  <p id="result">ממתין לסריקת מטען...</p>
   <ul id="items-list"></ul>
-  <p id="found-count">Items Found: <span id="found">0</span> / <span id="total">3</span></p>
-  <p id="timestamp">Generated at: <span id="datetime"></span></p>
+  <p id="found-count">נמצא מטען: <span id="found">0</span> / <span id="total">3</span></p>
+  <p id="stopwatch">זמן: 00:00</p>
 
   <script>
     // Predefined list of tags
     const tags = {
-      "12345": "Item 1 - Example Description",
-      "67890": "Item 2 - Another Example",
-      "ABCDE": "Item 3 - Demo Item"
+      "12345": "מטען 1 - כל הכבוד",
+      "67890": "מטען 2 -מעולה!",
+      "ABCDE": "מטען 3 - נפלא"
     };
 
     // Track scanned codes
     const scannedCodes = new Set();
     const totalItems = Object.keys(tags).length;
     document.getElementById("total").innerText = totalItems;
+
+    // Stopwatch variables
+    let stopwatchInterval;
+    let elapsedSeconds = 0;
+
+    function startStopwatch() {
+      elapsedSeconds = 0;
+      updateStopwatch();
+      if (stopwatchInterval) clearInterval(stopwatchInterval);
+      stopwatchInterval = setInterval(() => {
+        elapsedSeconds++;
+        updateStopwatch();
+      }, 1000);
+    }
+
+    function updateStopwatch() {
+      const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+      const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+      document.getElementById("stopwatch").innerText = `Time: ${minutes}:${seconds}`;
+    }
 
     // Display scanned result
     function revealItem(code) {
@@ -100,6 +126,8 @@
       const qrReaderDiv = document.getElementById("qr-reader");
       qrReaderDiv.style.display = "block"; // Show scanner when button is pressed
 
+      startStopwatch(); // Start stopwatch
+
       try {
         const qrReader = new Html5Qrcode("qr-reader");
         await qrReader.start(
@@ -115,18 +143,15 @@
           },
           () => {} // Ignore scanning errors silently
         );
-        status.innerText = "Camera active. Point at a QR code.";
+        status.innerText = "מצלמה פעילה - כוון לQR קוד";
       } catch (err) {
-        status.innerText = "Error starting scanner: " + err.message;
+        status.innerText = "שגיאה בהפעלת הסורק: " + err.message;
         console.error("Scanner error:", err);
       }
     }
 
     // Attach event listener to start button
     document.getElementById("start-btn").addEventListener("click", startScanner);
-
-    // Add timestamp
-    document.getElementById("datetime").innerText = new Date().toLocaleString();
   </script>
 </body>
 </html>
