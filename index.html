@@ -37,27 +37,36 @@
       font-size: 16px;
       cursor: pointer;
     }
+    #header {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>סורק המטענים של בל"ר פד"מ</h1>
-  <p id="status">לחץ על הכפתור להתחלת הסריקה</p>
-  <button id="start-btn">התחלה</button>
+  <img id="icon" src="balar_icon.png" alt="Icon" style="width: 50px; height: 50px;">
+  <h1 id="header">QR Code Scanner</h1>
+  <p id="status">Press the button to start scanning.</p>
+  <button id="start-btn">Start Scanner</button>
   <div id="qr-reader"></div>
   <p id="result">Waiting for scan...</p>
   <ul id="items-list"></ul>
-  <p id="timestamp">Generated at: 23.12.2024 00:38</p>
+  <p id="found-count">Items Found: <span id="found">0</span> / <span id="total">3</span></p>
+  <p id="timestamp">Generated at: <span id="datetime"></span></p>
 
   <script>
     // Predefined list of tags
     const tags = {
-      "12345": "מטען מספר 1 - יפה מאד",
-      "67890": "מטען מספר 2 - קדימה!",
+      "12345": "Item 1 - Example Description",
+      "67890": "Item 2 - Another Example",
       "ABCDE": "Item 3 - Demo Item"
     };
 
     // Track scanned codes
     const scannedCodes = new Set();
+    const totalItems = Object.keys(tags).length;
+    document.getElementById("total").innerText = totalItems;
 
     // Display scanned result
     function revealItem(code) {
@@ -70,8 +79,18 @@
         item.textContent = tags[code];
         itemList.appendChild(item);
         result.innerText = "Match Found: " + tags[code];
-      } else if (scannedCodes.has(code)) {
-        result.innerText = "Already Scanned!";
+
+        // Update count
+        document.getElementById("found").innerText = scannedCodes.size;
+
+        // Play sound
+        const audio = new Audio("marimba-ringtone-3-278837.mp3"); // Use external sound file
+        audio.play();
+
+        // Vibration
+        if (navigator.vibrate) {
+          navigator.vibrate(200); // Vibrate for 200ms
+        }
       }
     }
 
