@@ -20,34 +20,49 @@
       border: 2px solid #ccc;
       display: none; /* Hide scanner until button is pressed */
     }
-    #status, #result {
+    #status, #result, #found-count, #stopwatch {
       margin: 10px 0;
       font-size: 16px;
       font-weight: bold;
       position: relative;
       z-index: 10; /* Ensure text is above the video */
-      background: white; /* Make text more readable */
+      background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+      padding: 10px;
+      border-radius: 8px;
     }
     #items-list {
       margin-top: 10px;
       list-style-type: none;
-      padding: 0;
+      padding: 10px;
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+      border-radius: 8px;
     }
     button {
       margin: 10px;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
     }
     #header {
       font-size: 24px;
       font-weight: bold;
       margin-bottom: 10px;
-    }
-    #stopwatch {
-      margin: 10px 0;
-      font-size: 18px;
-      font-weight: bold;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -55,6 +70,7 @@
   <h1 id="header">סורק המטענים של בל"ר פד"מ</h1>
   <p id="status">ממתין להתחלת הסריקה.</p>
   <button id="start-btn">התחל סריקה</button>
+  <button id="end-btn">סיים סריקה</button>
   <div id="qr-reader"></div>
   <p id="result">ממתין לסריקת מטען...</p>
   <ul id="items-list"></ul>
@@ -64,8 +80,8 @@
   <script>
     // Predefined list of tags
     const tags = {
-      "12345": "מטען 1 - כל הכבוד",
-      "67890": "מטען 2 -מעולה!",
+      "a100": "מטען 1 - כל הכבוד",
+      "a200": "מטען 2 -מעולה!",
       "ABCDE": "מטען 3 - נפלא"
     };
 
@@ -77,6 +93,7 @@
     // Stopwatch variables
     let stopwatchInterval;
     let elapsedSeconds = 0;
+    let scanner;
 
     function startStopwatch() {
       elapsedSeconds = 0;
@@ -91,7 +108,16 @@
     function updateStopwatch() {
       const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
       const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
-      document.getElementById("stopwatch").innerText = `Time: ${minutes}:${seconds}`;
+      document.getElementById("stopwatch").innerText = `זמן: ${minutes}:${seconds}`;
+    }
+
+    function stopScanner() {
+      if (scanner) {
+        scanner.stop(); // Stop the scanner
+      }
+      clearInterval(stopwatchInterval);
+      const remaining = totalItems - scannedCodes.size;
+      alert(`סיכום הסריקה:\nנמצאו ${scannedCodes.size} מתוך ${totalItems} מטענים.\nחסרים: ${remaining}\nזמן כולל: ${Math.floor(elapsedSeconds / 60)}:${(elapsedSeconds % 60).toString().padStart(2, '0')}`);
     }
 
     // Display scanned result
@@ -110,48 +136,46 @@
         document.getElementById("found").innerText = scannedCodes.size;
 
         // Play sound
-        const audio = new Audio("marimba-ringtone-3-278837.mp3"); // Use external sound file
+        const audio = new Audio("marimba-ringtone-3-278837.mp3");
         audio.play();
 
         // Vibration
         if (navigator.vibrate) {
-          navigator.vibrate(200); // Vibrate for 200ms
+          navigator.vibrate(200);
         }
       }
     }
 
-    // Start QR code scanner
     async function startScanner() {
       const status = document.getElementById("status");
       const qrReaderDiv = document.getElementById("qr-reader");
-      qrReaderDiv.style.display = "block"; // Show scanner when button is pressed
+      qrReaderDiv.style.display = "block";
 
-      startStopwatch(); // Start stopwatch
+      startStopwatch();
 
       try {
-        const qrReader = new Html5Qrcode("qr-reader");
-        await qrReader.start(
-          { facingMode: "environment" }, // Use back camera, fallback if unavailable
+        scanner = new Html5Qrcode("qr-reader");
+        await scanner.start(
+          { facingMode: "environment" },
           {
             fps: 10,
-            qrbox: { width: 250, height: 250 } // Focus box
+            qrbox: { width: 250, height: 250 }
           },
           (decodedText) => {
-            if (!scannedCodes.has(decodedText.trim())) { // Process only once
+            if (!scannedCodes.has(decodedText.trim())) {
               revealItem(decodedText.trim());
             }
           },
-          () => {} // Ignore scanning errors silently
+          () => {}
         );
         status.innerText = "מצלמה פעילה - כוון לQR קוד";
       } catch (err) {
         status.innerText = "שגיאה בהפעלת הסורק: " + err.message;
-        console.error("Scanner error:", err);
       }
     }
 
-    // Attach event listener to start button
     document.getElementById("start-btn").addEventListener("click", startScanner);
+    document.getElementById("end-btn").addEventListener("click", stopScanner);
   </script>
 </body>
 </html>
