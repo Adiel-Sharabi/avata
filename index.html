@@ -72,6 +72,7 @@
   <p id="status">ממתין להתחלת הסריקה.</p>
   <button id="start-btn">התחל סריקה</button>
   <button id="end-btn">סיים סריקה</button>
+  <button id="reset-btn">אפס הכל</button>
   <div id="qr-reader"></div>
   <p id="result">ממתין לסריקת מטען...</p>
   <ul id="items-list"></ul>
@@ -87,21 +88,21 @@
     };
 
     // Track scanned codes
-    const scannedCodes = new Set();
+    const scannedCodes = new Set(JSON.parse(localStorage.getItem('scannedCodes')) || []);
     const totalItems = Object.keys(tags).length;
     document.getElementById("total").innerText = totalItems;
 
     // Stopwatch variables
     let stopwatchInterval;
-    let elapsedSeconds = 0;
+    let elapsedSeconds = parseInt(localStorage.getItem('elapsedSeconds')) || 0;
     let scanner;
 
     function startStopwatch() {
-      elapsedSeconds = 0;
       updateStopwatch();
       if (stopwatchInterval) clearInterval(stopwatchInterval);
       stopwatchInterval = setInterval(() => {
         elapsedSeconds++;
+        localStorage.setItem('elapsedSeconds', elapsedSeconds);
         updateStopwatch();
       }, 1000);
     }
@@ -115,35 +116,37 @@
     function stopScanner() {
       if (scanner) {
         scanner.stop(); // Stop the scanner
+        document.getElementById("qr-reader").style.display = "none";
       }
       clearInterval(stopwatchInterval);
       const remaining = totalItems - scannedCodes.size;
       alert(`סיכום הסריקה:\nנמצאו ${scannedCodes.size} מתוך ${totalItems} מטענים.\nחסרים: ${remaining}\nזמן כולל: ${Math.floor(elapsedSeconds / 60)}:${(elapsedSeconds % 60).toString().padStart(2, '0')}`);
     }
 
-    // Display scanned result
+    function resetAll() {
+      localStorage.clear();
+      scannedCodes.clear();
+      elapsedSeconds = 0;
+      document.getElementById("items-list").innerHTML = "";
+      document.getElementById("found").innerText = "0";
+      updateStopwatch();
+    }
+
     function revealItem(code) {
       const result = document.getElementById("result");
       const itemList = document.getElementById("items-list");
 
       if (tags[code] && !scannedCodes.has(code)) {
-        scannedCodes.add(code); // Mark code as scanned
+        scannedCodes.add(code);
+        localStorage.setItem('scannedCodes', JSON.stringify([...scannedCodes]));
         const item = document.createElement("li");
         item.textContent = tags[code];
         itemList.appendChild(item);
         result.innerText = "Match Found: " + tags[code];
-
-        // Update count
         document.getElementById("found").innerText = scannedCodes.size;
-
-        // Play sound
         const audio = new Audio("marimba-ringtone-3-278837.mp3");
         audio.play();
-
-        // Vibration
-        if (navigator.vibrate) {
-          navigator.vibrate(200);
-        }
+        if (navigator.vibrate) navigator.vibrate(200);
       }
     }
 
@@ -151,32 +154,22 @@
       const status = document.getElementById("status");
       const qrReaderDiv = document.getElementById("qr-reader");
       qrReaderDiv.style.display = "block";
-
       startStopwatch();
 
       try {
         scanner = new Html5Qrcode("qr-reader");
         await scanner.start(
           { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-          },
-          (decodedText) => {
-            if (!scannedCodes.has(decodedText.trim())) {
-              revealItem(decodedText.trim());
-            }
-          },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => { if (!scannedCodes.has(decodedText.trim())) revealItem(decodedText.trim()); },
           () => {}
         );
-        status.innerText = "מצלמה פעילה - כוון לQR קוד";
-      } catch (err) {
-        status.innerText = "שגיאה בהפעלת הסורק: " + err.message;
-      }
+      } catch (err) { status.innerText = "שגיאה בהפעלת הסורק: " + err.message; }
     }
 
     document.getElementById("start-btn").addEventListener("click", startScanner);
     document.getElementById("end-btn").addEventListener("click", stopScanner);
+    document.getElementById("reset-btn").addEventListener("click", resetAll);
   </script>
 </body>
 </html>
