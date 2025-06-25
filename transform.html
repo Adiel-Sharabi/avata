@@ -2,38 +2,34 @@
 <html lang="he">
 <head>
   <meta charset="UTF-8">
-  <title>המרת קואורדינטות UTM ל-WGS84</title>
+  <title>המרת UTM ל-WGS84</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
 </head>
 <body>
   <h2>המרת קואורדינטות (UTM Zone 36N) ל-WGS84</h2>
-  <label>קואורדינטת Easting (X): <input type="number" id="easting" /></label><br>
-  <label>קואורדינטת Northing (Y): <input type="number" id="northing" /></label><br><br>
-  <button onclick="convert()">בצע המרה</button>
+  <label>East (X): <input type="number" id="easting" /></label><br>
+  <label>North (Y): <input type="number" id="northing" /></label><br><br>
+  <button onclick="convert()">המר</button>
 
   <h3>תוצאה:</h3>
   <div id="result"></div>
 
   <script>
-    async function convert() {
-      const easting = document.getElementById('easting').value;
-      const northing = document.getElementById('northing').value;
+    function convert() {
+      const easting = parseFloat(document.getElementById("easting").value);
+      const northing = parseFloat(document.getElementById("northing").value);
 
-      // פנייה לשרת ההמרה של epsg.io
-      const url = `https://epsg.io/trans?x=${easting}&y=${northing}&srs=32636&t_srs=4326`;
+      // הגדרת מערכות קואורדינטות
+      const utm36 = "+proj=utm +zone=36 +ellps=WGS84 +units=m +no_defs";
+      const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
 
-      const response = await fetch(url);
-      const data = await response.json();
+      const [lon, lat] = proj4(utm36, wgs84, [easting, northing]);
 
-      if (data && data.y && data.x) {
-        const resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = `
-          <p>קו רוחב (Latitude): ${data.y.toFixed(6)}</p>
-          <p>קו אורך (Longitude): ${data.x.toFixed(6)}</p>
-          <p><a href="https://www.google.com/maps?q=${data.y},${data.x}" target="_blank">פתח בגוגל מפות</a></p>
-        `;
-      } else {
-        alert("שגיאה בהמרה. ודא שהקלט תקין.");
-      }
+      document.getElementById("result").innerHTML = `
+        <p>קו רוחב (Latitude): ${lat.toFixed(6)}</p>
+        <p>קו אורך (Longitude): ${lon.toFixed(6)}</p>
+        <p><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">פתח בגוגל מפות</a></p>
+      `;
     }
   </script>
 </body>
