@@ -9,6 +9,19 @@
     input, button, textarea { font-size: 1em; margin-top: 5px; }
     #coordsBox { width: 300px; height: 2em; }
     footer { margin-top: 40px; color: gray; font-size: 0.9em; }
+    #copyButton {
+      margin-right: 10px;
+      padding: 2px 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+    #copyStatus {
+      color: green;
+      font-size: 0.85em;
+      display: inline-block;
+      margin-right: 10px;
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
@@ -31,6 +44,11 @@
       const easting = parseFloat(document.getElementById("easting").value);
       const northing = parseFloat(document.getElementById("northing").value);
 
+      if (isNaN(easting) || isNaN(northing)) {
+        alert("יש להזין ערכים מספריים תקינים.");
+        return;
+      }
+
       const utm36 = "+proj=utm +zone=36 +ellps=WGS84 +units=m +no_defs";
       const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
 
@@ -45,7 +63,18 @@
         <p><a href="${googleLink}" target="_blank">פתח בגוגל מפות</a></p>
         <label>העתק קואורדינטות לגוגל מפות:</label><br>
         <textarea id="coordsBox" readonly>${coordsText}</textarea>
+        <button id="copyButton" onclick="copyCoords()">העתק</button>
+        <span id="copyStatus">הועתק!</span>
       `;
+    }
+
+    function copyCoords() {
+      const coordsBox = document.getElementById("coordsBox");
+      const copyStatus = document.getElementById("copyStatus");
+      coordsBox.select();
+      document.execCommand("copy");
+      copyStatus.style.visibility = "visible";
+      setTimeout(() => copyStatus.style.visibility = "hidden", 2000);
     }
   </script>
 </body>
