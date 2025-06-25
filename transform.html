@@ -4,32 +4,47 @@
   <meta charset="UTF-8">
   <title>המרת UTM ל-WGS84</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; }
+    input, button, textarea { font-size: 1em; margin-top: 5px; }
+    #coordsBox { width: 300px; height: 2em; }
+    footer { margin-top: 40px; color: gray; font-size: 0.9em; }
+  </style>
 </head>
 <body>
   <h2>המרת קואורדינטות (UTM Zone 36N) ל-WGS84</h2>
-  <label> 12:16 </label> <br>
+  
   <label>East (X): <input type="number" id="easting" /></label><br>
   <label>North (Y): <input type="number" id="northing" /></label><br><br>
+  
   <button onclick="convert()">המר</button>
 
   <h3>תוצאה:</h3>
   <div id="result"></div>
+
+  <footer>
+    גרסה: 1.0.0 &nbsp; | &nbsp; עודכן לאחרונה: 25/06/2025 12:40
+  </footer>
 
   <script>
     function convert() {
       const easting = parseFloat(document.getElementById("easting").value);
       const northing = parseFloat(document.getElementById("northing").value);
 
-      // הגדרת מערכות קואורדינטות
       const utm36 = "+proj=utm +zone=36 +ellps=WGS84 +units=m +no_defs";
       const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
 
       const [lon, lat] = proj4(utm36, wgs84, [easting, northing]);
 
+      const coordsText = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+      const googleLink = `https://www.google.com/maps?q=${lat},${lon}`;
+
       document.getElementById("result").innerHTML = `
-        <p>קו רוחב (Latitude): ${lat.toFixed(6)}</p>
-        <p>קו אורך (Longitude): ${lon.toFixed(6)}</p>
-        <p><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">פתח בגוגל מפות</a></p>
+        <p>קו רוחב: ${lat.toFixed(6)}</p>
+        <p>קו אורך: ${lon.toFixed(6)}</p>
+        <p><a href="${googleLink}" target="_blank">פתח בגוגל מפות</a></p>
+        <label>העתק קואורדינטות לגוגל מפות:</label><br>
+        <textarea id="coordsBox" readonly>${coordsText}</textarea>
       `;
     }
   </script>
