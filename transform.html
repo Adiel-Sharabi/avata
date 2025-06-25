@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <title>המרת קואורדינטות UTM ל-WGS84</title>
+</head>
+<body>
+  <h2>המרת קואורדינטות (UTM Zone 36N) ל-WGS84</h2>
+  <label>קואורדינטת Easting (X): <input type="number" id="easting" /></label><br>
+  <label>קואורדינטת Northing (Y): <input type="number" id="northing" /></label><br><br>
+  <button onclick="convert()">בצע המרה</button>
+
+  <h3>תוצאה:</h3>
+  <div id="result"></div>
+
+  <script>
+    async function convert() {
+      const easting = document.getElementById('easting').value;
+      const northing = document.getElementById('northing').value;
+
+      // פנייה לשרת ההמרה של epsg.io
+      const url = `https://epsg.io/trans?x=${easting}&y=${northing}&srs=32636&t_srs=4326`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data && data.y && data.x) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+          <p>קו רוחב (Latitude): ${data.y.toFixed(6)}</p>
+          <p>קו אורך (Longitude): ${data.x.toFixed(6)}</p>
+          <p><a href="https://www.google.com/maps?q=${data.y},${data.x}" target="_blank">פתח בגוגל מפות</a></p>
+        `;
+      } else {
+        alert("שגיאה בהמרה. ודא שהקלט תקין.");
+      }
+    }
+  </script>
+</body>
+</html>
